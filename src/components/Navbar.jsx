@@ -3,14 +3,30 @@ import {
   Menu, X, Phone, Mail, MapPin, ChevronDown, 
   Heart, Sparkles 
 } from 'lucide-react';
+import { API_BASE } from '../config/api';
 
 export default function Navbar({ currentRoute, setCurrentRoute, openSupportModal }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
   const [newsDropdownOpen, setNewsDropdownOpen] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
 
   const servicesTimeoutRef = useRef(null);
   const newsTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/years`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+          setAvailableYears(json.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch years from API:', err);
+        setAvailableYears([]);
+      });
+  }, []);
 
   const handleServicesMouseEnter = () => {
     if (servicesTimeoutRef.current) clearTimeout(servicesTimeoutRef.current);
@@ -199,30 +215,15 @@ export default function Navbar({ currentRoute, setCurrentRoute, openSupportModal
                   >
                     All News & Events
                   </button>
-                  <button
-                    onClick={() => handleNavClick('news', '2025')}
-                    className="w-full text-left px-5 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#18395F] hover:text-white transition-colors block cursor-pointer"
-                  >
-                    Events of 2025
-                  </button>
-                  <button
-                    onClick={() => handleNavClick('news', '2024')}
-                    className="w-full text-left px-5 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#18395F] hover:text-white transition-colors block cursor-pointer"
-                  >
-                    Events of 2024
-                  </button>
-                  <button
-                    onClick={() => handleNavClick('news', '2023')}
-                    className="w-full text-left px-5 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#18395F] hover:text-white transition-colors block cursor-pointer"
-                  >
-                    Events of 2023
-                  </button>
-                  <button
-                    onClick={() => handleNavClick('news', '2022')}
-                    className="w-full text-left px-5 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#18395F] hover:text-white transition-colors block cursor-pointer"
-                  >
-                    Events of 2022
-                  </button>
+                  {availableYears.map((y) => (
+                    <button
+                      key={y}
+                      onClick={() => handleNavClick('news', y)}
+                      className="w-full text-left px-5 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#18395F] hover:text-white transition-colors block cursor-pointer"
+                    >
+                      Events of {y}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -331,7 +332,7 @@ export default function Navbar({ currentRoute, setCurrentRoute, openSupportModal
               News & Events
             </button>
             <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-700 ml-3">
-              {['2025', '2024', '2023', '2022'].map((year) => (
+              {availableYears.map((year) => (
                 <button
                   key={year}
                   onClick={() => handleNavClick('news', year)}

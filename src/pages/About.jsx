@@ -48,10 +48,11 @@ export default function About({ setCurrentRoute, openSupportModal }) {
           <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-200">
             <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-inner">
               <iframe
-                src="https://www.youtube.com/embed/6PHegSsR5pA?autoplay=0&rel=0&modestbranding=1"
-                title="Karnataka Jesuit Mission 2025"
+                src="https://www.youtube.com/embed/6PHegSsR5pA?si=xzh_6MHkSNrQZMJc"
+                title="YouTube video player"
                 className="w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
               ></iframe>
             </div>

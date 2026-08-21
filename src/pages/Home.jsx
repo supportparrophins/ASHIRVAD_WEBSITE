@@ -1,39 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { 
-  ChevronLeft, ChevronRight, ArrowRight, Heart, Sparkles, 
+  ArrowRight, Heart, 
   MapPin, Phone, Mail, Building, Users, Calendar, Eye, 
-  CheckCircle2, Compass, ShieldCheck, BookOpen 
+  CheckCircle2, Compass, ShieldCheck, BookOpen
 } from 'lucide-react';
 
 export default function Home({ setCurrentRoute, openSupportModal, openLightbox, openVisionModal }) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const heroSlides = [
-    {
-      title: "ASHIRVAD",
-      subtitle: "Accompanying the Marginalised",
-      tagline: "Jesuit Centre for Social Research & Action • Bengaluru",
-      desc: "Rooted in the charism of Karnataka Jesuits, fostering social research, grassroots education, and inter-religious harmony since 1973.",
-      image: "/uploads/2020/04/Head-Slider-Ashirvad-1-1024x727-1-1-890x664.jpg",
-      route: "about"
-    },
-    {
-      title: "SPANDANA STUDY CENTRES",
-      subtitle: "Centre for Social Concern (CSC)",
-      tagline: "Grassroots Education in Bengaluru Slums & Migrant Colonies",
-      desc: "Evening tuition coaching, stationery distribution, and holistic life-skill accompaniment for migrant children.",
-      image: "/uploads/2025/09/DSC_3027-650x572.jpg",
-      route: "csc"
-    },
-    {
-      title: "INTER-RELIGIOUS HARMONY",
-      subtitle: "IRHM Golden Jubilee",
-      tagline: "Uniting Hearts Across Faiths & Communities",
-      desc: "Regular monthly dialogue meetings and spiritual retreats fostering brotherhood and standing united against fanaticism.",
-      image: "/uploads/2025/09/IRHM-1.png",
-      route: "irhm"
-    }
-  ];
+  const videoRef = useRef(null);
 
   const cardsData = {
     vision: {
@@ -91,11 +64,11 @@ Situated on St. Mark's Road, Ashirvad serves as the central hub for the Karnatak
   };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [heroSlides.length]);
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   const facilityGallery = [
     { title: "CHAPEL", image: "/uploads/2025/09/about3-1024x791.png" },
@@ -118,95 +91,20 @@ Situated on St. Mark's Road, Ashirvad serves as the central hub for the Karnatak
   return (
     <div className="space-y-16 sm:space-y-24 pb-16 bg-white text-slate-900">
       
-      {/* 1. HERO SLIDER */}
-      <section className="relative h-[480px] sm:h-[580px] lg:h-[640px] bg-slate-950 overflow-hidden select-none">
-        {heroSlides.map((slide, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              currentSlide === index ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-            }`}
-          >
-            <img
-              src={slide.image}
-              alt={slide.title}
-              className="w-full h-full object-cover brightness-[0.45]"
-              onError={(e) => {
-                e.target.src = '/uploads/2020/04/DSC_4706-2-scaled-1.jpg';
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent"></div>
-            
-            <div className="absolute inset-0 flex items-center">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-                <div className="max-w-3xl space-y-4 sm:space-y-5 animate-fade-in text-white">
-                  <div className="inline-flex items-center gap-2 bg-[#0D2A45] text-white px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow border border-slate-700">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{slide.subtitle}</span>
-                  </div>
-
-                  <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight text-white drop-shadow-md">
-                    {slide.title}
-                  </h1>
-
-                  <p className="text-amber-300 text-sm sm:text-base font-semibold tracking-wide">
-                    {slide.tagline}
-                  </p>
-
-                  <p className="text-slate-200 text-xs sm:text-sm md:text-base leading-relaxed line-clamp-3 max-w-2xl font-light">
-                    {slide.desc}
-                  </p>
-
-                  <div className="pt-3 flex flex-wrap items-center gap-3 sm:gap-4">
-                    <button
-                      onClick={() => navigateTo(slide.route)}
-                      className="bg-[#0D2A45] hover:bg-[#133A61] text-white text-xs sm:text-sm font-bold uppercase tracking-wider px-6 py-3 rounded-lg shadow-lg transition-all flex items-center gap-2 border border-slate-600 cursor-pointer"
-                    >
-                      <span>Explore More</span>
-                      <ArrowRight className="w-4 h-4 text-amber-400" />
-                    </button>
-                    <button
-                      onClick={() => navigateTo('contact')}
-                      className="bg-white/15 hover:bg-white/25 text-white border border-white/30 backdrop-blur-md text-xs sm:text-sm font-bold uppercase tracking-wider px-6 py-3 rounded-lg transition-all cursor-pointer"
-                    >
-                      Contact Us
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* Carousel Controls */}
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-[#0D2A45] transition-colors cursor-pointer"
-          aria-label="Previous Slide"
+      {/* 1. HERO VIDEO ONLY (LOOP PLAY) */}
+      <section className="relative w-full h-[450px] sm:h-[550px] md:h-[640px] lg:h-[720px] bg-black overflow-hidden select-none">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster="/uploads/2020/04/Head-Slider-Ashirvad-1-1024x727-1-1-890x664.jpg"
+          className="w-full h-full object-cover"
         >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-[#0D2A45] transition-colors cursor-pointer"
-          aria-label="Next Slide"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-
-        {/* Indicators */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-          {heroSlides.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentSlide(idx)}
-              className={`h-2 rounded-full transition-all cursor-pointer ${
-                currentSlide === idx ? 'w-8 bg-amber-400' : 'w-2 bg-white/50'
-              }`}
-              aria-label={`Slide ${idx + 1}`}
-            />
-          ))}
-        </div>
+          <source src="/hero.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       </section>
 
       {/* 2. VISION, MISSION, ASHIRVAD (Interactive Popup Cards) */}
@@ -532,12 +430,12 @@ Situated on St. Mark's Road, Ashirvad serves as the central hub for the Karnatak
         </div>
       </section>
 
-      {/* 6. EVENTS OF THE YEAR 2025 */}
+      {/* 6. HIGHLIGHTED INITIATIVES & EVENTS */}
       <section className="bg-slate-950 text-white py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="text-center space-y-3">
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-              EVENTS OF THE YEAR 2025
+              NEWS &amp; EVENTS ARCHIVE
             </h2>
             <p className="text-amber-300/90 text-sm sm:text-base font-serif italic max-w-2xl mx-auto">
               "Ashirvad – Where Hearts Meet, Dreams Grow And Every Moment Becomes A Blessing."
@@ -551,13 +449,13 @@ Situated on St. Mark's Road, Ashirvad serves as the central hub for the Karnatak
                   src="/uploads/2025/09/IRHM-1.png"
                   alt="IRHM Golden Jubilee"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
-                  onClick={() => openLightbox && openLightbox("/uploads/2025/09/IRHM-1.png", "IRHM Golden Jubilee", "Events 2025")}
+                  onClick={() => openLightbox && openLightbox("/uploads/2025/09/IRHM-1.png", "IRHM Golden Jubilee", "Events")}
                 />
               </div>
 
               <div className="md:col-span-6 p-6 sm:p-8 space-y-4">
                 <span className="text-xs font-bold text-amber-400 uppercase tracking-widest block">
-                  HIGHLIGHTED EVENT
+                  FEATURED EVENT
                 </span>
                 <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white leading-tight">
                   03 AUGUST INAUGURATION OF GOLDEN JUBILEE OF IRHM
@@ -567,10 +465,10 @@ Situated on St. Mark's Road, Ashirvad serves as the central hub for the Karnatak
                 </p>
                 <div className="pt-2">
                   <button
-                    onClick={() => navigateTo('news', '2025')}
+                    onClick={() => navigateTo('news')}
                     className="bg-[#0D2A45] hover:bg-[#133A61] text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow border border-slate-600 cursor-pointer"
                   >
-                    <span>View All 2025 Events</span>
+                    <span>Explore News &amp; Events</span>
                     <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
                   </button>
                 </div>

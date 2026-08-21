@@ -20,19 +20,19 @@ import Contact from './pages/Contact';
 // Helper to determine route from current pathname
 const getRouteFromPath = (path) => {
   const cleanPath = path.toLowerCase().replace(/^\/|\/$/g, '');
-  if (!cleanPath || cleanPath === 'home') return { route: 'home', year: '2025' };
-  if (cleanPath === 'about') return { route: 'about', year: '2025' };
-  if (cleanPath === 'service' || cleanPath === 'services') return { route: 'services', year: '2025' };
-  if (cleanPath === 'hrdc') return { route: 'hrdc', year: '2025' };
-  if (cleanPath === 'social-conern' || cleanPath === 'csc' || cleanPath === 'spandana') return { route: 'csc', year: '2025' };
-  if (cleanPath === 'irhm') return { route: 'irhm', year: '2025' };
-  if (cleanPath === 'news-2025') return { route: 'news', year: '2025' };
-  if (cleanPath === 'news-2024') return { route: 'news', year: '2024' };
-  if (cleanPath === 'news-2023') return { route: 'news', year: '2023' };
-  if (cleanPath === 'news-2022') return { route: 'news', year: '2022' };
-  if (cleanPath === 'news-and-events' || cleanPath === 'news') return { route: 'news', year: '2025' };
-  if (cleanPath === 'contacts' || cleanPath === 'contact') return { route: 'contact', year: '2025' };
-  return { route: 'home', year: '2025' };
+  if (!cleanPath || cleanPath === 'home') return { route: 'home', year: '' };
+  if (cleanPath === 'about') return { route: 'about', year: '' };
+  if (cleanPath === 'service' || cleanPath === 'services') return { route: 'services', year: '' };
+  if (cleanPath === 'hrdc') return { route: 'hrdc', year: '' };
+  if (cleanPath === 'social-conern' || cleanPath === 'csc' || cleanPath === 'spandana') return { route: 'csc', year: '' };
+  if (cleanPath === 'irhm') return { route: 'irhm', year: '' };
+  
+  const newsMatch = cleanPath.match(/^news-(\d{4})$/);
+  if (newsMatch) return { route: 'news', year: newsMatch[1] };
+
+  if (cleanPath === 'news-and-events' || cleanPath === 'news') return { route: 'news', year: '' };
+  if (cleanPath === 'contacts' || cleanPath === 'contact') return { route: 'contact', year: '' };
+  return { route: 'home', year: '' };
 };
 
 // Helper to get URL path from route name
@@ -57,7 +57,7 @@ const getPathFromRoute = (route, year) => {
 export default function App() {
   const initial = getRouteFromPath(window.location.pathname);
   const [currentRoute, setCurrentRoute] = useState(initial.route);
-  const [selectedNewsYear, setSelectedNewsYear] = useState(initial.year || '2025');
+  const [selectedNewsYear, setSelectedNewsYear] = useState(initial.year || '');
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [visionModalData, setVisionModalData] = useState(null);
 

@@ -2,19 +2,74 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Search, Filter, Sparkles, MapPin, 
   ChevronRight, Eye, Image as ImageIcon, BookOpen, Heart,
-  Tag, Compass, ArrowUpRight
+  Tag, Compass, ArrowUpRight, Loader2
 } from 'lucide-react';
-import newsStructuredData from '../data/newsStructured.json';
+import { API_BASE } from '../config/api';
 
-export default function NewsEvents({ openLightbox, initialYear = '2025', onYearChange }) {
-  const [selectedYear, setSelectedYear] = useState(initialYear || '2025');
+export default function NewsEvents({ openLightbox, initialYear, onYearChange }) {
+  const [yearTabs, setYearTabs] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(initialYear || '');
   const [searchQuery, setSearchQuery] = useState('');
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
 
+  // ── Fetch available years from PHP API on mount ──────────────────
+  useEffect(() => {
+    fetch(`${API_BASE}/years`)
+      .then(r => r.json())
+      .then(json => {
+        if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+          setYearTabs(json.data);
+          if (!selectedYear && !initialYear) {
+            setSelectedYear(json.data[0]);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch years from API:', err);
+        setYearTabs([]);
+      });
+  }, [initialYear, selectedYear]);
+
+  // ── Sync year when parent prop changes ───────────────────────────
   useEffect(() => {
     if (initialYear && initialYear !== 'All') {
       setSelectedYear(initialYear);
     }
   }, [initialYear]);
+
+  // ── Fetch events from PHP API for the selected year ───────────────
+  useEffect(() => {
+    if (!selectedYear) {
+      setLoading(false);
+      setEvents([]);
+      return;
+    }
+
+    setLoading(true);
+    setApiError(false);
+
+    fetch(`${API_BASE}/events?year=${selectedYear}`)
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(json => {
+        if (json.status === 'success' && Array.isArray(json.data)) {
+          setEvents(json.data);
+          setApiError(false);
+        } else {
+          setEvents([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch events from API:', err);
+        setEvents([]);
+        setApiError(true);
+      })
+      .finally(() => setLoading(false));
+  }, [selectedYear]);
 
   const handleYearSelect = (y) => {
     setSelectedYear(y);
@@ -24,16 +79,14 @@ export default function NewsEvents({ openLightbox, initialYear = '2025', onYearC
     }
   };
 
-  const yearTabs = ['2025', '2024', '2023', '2022'];
-  const eventsForYear = newsStructuredData[selectedYear] || [];
-
-  const filteredEvents = eventsForYear.filter((item) => {
+  const filteredEvents = events.filter((item) => {
     const query = searchQuery.toLowerCase();
+    const plainDesc = (item.description || '').replace(/<[^>]*>/g, ' ').toLowerCase();
     return (
       !searchQuery ||
-      item.title.toLowerCase().includes(query) ||
-      item.description.toLowerCase().includes(query) ||
-      item.date.toLowerCase().includes(query) ||
+      item.title?.toLowerCase().includes(query) ||
+      plainDesc.includes(query) ||
+      item.date?.toLowerCase().includes(query) ||
       (item.sideLabel && item.sideLabel.toLowerCase().includes(query))
     );
   });
@@ -70,7 +123,7 @@ export default function NewsEvents({ openLightbox, initialYear = '2025', onYearC
             <Search className="w-3.5 h-3.5 text-amber-400/70 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder={`Search ${selectedYear} events...`}
+              placeholder={selectedYear ? `Search ${selectedYear} events...` : 'Search events...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-8 pr-3 py-1 text-xs bg-[#142336] border border-slate-700/80 text-white rounded-full focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all placeholder:text-slate-400"
@@ -79,21 +132,37 @@ export default function NewsEvents({ openLightbox, initialYear = '2025', onYearC
         </div>
       </section>
 
-      {/* 2. Main Events Feed (Reduced Spacing & Compact Clean Layout) */}
+      {/* 2. Main Events Feed */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-5 space-y-8">
-        {filteredEvents.length === 0 ? (
+
+        {/* Loading spinner */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+            <p className="text-slate-400 text-xs font-medium uppercase tracking-widest">
+              Loading {selectedYear} Events…
+            </p>
+          </div>
+        )}
+
+        {!loading && filteredEvents.length === 0 ? (
           <div className="bg-[#0E1724] p-10 text-center rounded-xl border border-slate-800 space-y-3 shadow-lg my-6">
             <Calendar className="w-8 h-8 text-amber-400 mx-auto opacity-80" />
             <h3 className="text-lg font-serif font-bold text-white">No Events Found</h3>
-            <p className="text-slate-400 text-xs">No matches found for "{searchQuery}". Try a different keyword.</p>
-            <button
-              onClick={() => setSearchQuery('')}
-              className="text-xs font-bold text-amber-400 hover:text-amber-300 underline uppercase tracking-wider cursor-pointer"
-            >
-              Clear search filter
-            </button>
+            <p className="text-slate-400 text-xs">
+              {searchQuery ? `No matches found for "${searchQuery}".` : (selectedYear ? `No events found for ${selectedYear}.` : 'No events available.')}
+            </p>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-xs font-bold text-amber-400 hover:text-amber-300 underline uppercase tracking-wider cursor-pointer"
+              >
+                Clear search filter
+              </button>
+            )}
           </div>
-        ) : (
+        ) : !loading && (
+
           filteredEvents.map((ev, index) => {
             const prevEvent = index > 0 ? filteredEvents[index - 1] : null;
             const showMonthBanner = !prevEvent || prevEvent.monthHeader !== ev.monthHeader;
@@ -172,10 +241,11 @@ export default function NewsEvents({ openLightbox, initialYear = '2025', onYearC
                           {ev.title}
                         </h3>
 
-                        {/* Narrative Description */}
-                        <p className="text-slate-300 text-xs sm:text-[13px] leading-relaxed whitespace-pre-line font-light line-clamp-6">
-                          {ev.description}
-                        </p>
+                        {/* Narrative Description (CKEditor Rich Text Support) */}
+                        <div 
+                          className="text-slate-300 text-xs sm:text-[13px] leading-relaxed font-light line-clamp-6 [&_p]:mb-1.5 [&_p:last-child]:mb-0 [&_span]:inline [&_a]:text-amber-400 [&_a]:underline"
+                          dangerouslySetInnerHTML={{ __html: ev.description || '' }}
+                        />
                       </div>
 
                       {/* Article Footer Meta */}
